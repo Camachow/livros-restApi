@@ -1,20 +1,19 @@
-import express from "express"
+import express from "express";
+import dbConnect from "./config/dbConnect.js";
+import livro from "./models/Livro.js"
+
+const connection = await dbConnect();
+
+connection.on("error", console.error.bind(console, "connection error:"));
+
+connection.once("open", () => {
+    console.log("Conexão com o banco de dados estabelecida com sucesso!");
+});
 
 const app = express()
 
 // Middleware para parsear o corpo das requisições JSON
 app.use(express.json());
-
-const livros =[
-    {
-        id: 1,
-        titulo: "Lord of Rings"
-    },
-    {
-        id: 2,
-        titulo: "o Hobbit"
-    },    
-]
 
 function findBookById(id) {
     return livros.findIndex(livro => {
@@ -26,13 +25,19 @@ app.get("/", (req, res) => {
     res.status(200).send("Curso de Node.js");
 });
 
+app.get("/livros", async (req, res) => {
+    try {
+        const listaLivros = await livro.find();
+        res.status(200).json(listaLivros);
+    } catch (error) {
+        console.error("Erro ao buscar livros:", error);
+        res.status(500).send("Erro ao buscar livros.");
+    }
+});
+
 app.get("/livros/:id", (req, res) => {
     const index = findBookById(req.params.id);
     res.status(200).json(livros[index]);
-});
-
-app.get("/livros", (req, res) => {
-    res.status(200).json(livros);
 });
 
 app.post("/livros", (req, res) => {
