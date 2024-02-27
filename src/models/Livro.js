@@ -1,5 +1,5 @@
-import { Int32 } from 'mongodb';
 import mongoose from 'mongoose';
+import { autorSchema } from './Autor.js';
 
 const livrosSchema = new mongoose.Schema({
     id: {type: mongoose.Schema.Types.ObjectId},
@@ -16,7 +16,8 @@ const livrosSchema = new mongoose.Schema({
     paginas: {
         type: Number,
     },
-
+    autor: autorSchema,
+    
 }, {versionKey: false});
 
 const livro = mongoose.model("livros", livrosSchema); //((collection name), (Schema))

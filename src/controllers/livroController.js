@@ -1,4 +1,5 @@
 import livro from "../models/Livro.js";
+import { autor } from "../models/Autor.js"
 
 class LivroController {
 
@@ -14,8 +15,9 @@ class LivroController {
 
     static async getLivroById(req, res) {
         try {
-            const livro = await livro.findById(req.params.id);
-            res.status(200).json(livro);
+            const id = req.params.id;
+            const livroEncontrado = await livro.findById(id);
+            res.status(200).json(livroEncontrado);
         }catch(error){
             console.error("Erro ao buscar livro:", error);
             res.status(500).send("Erro ao buscar livro.");
@@ -23,9 +25,13 @@ class LivroController {
     }
 
     static async createLivro(req, res) {
+        const novoLivro = req.body;
         try {
-            const novoLivro = await livro.create(req.body);
-            res.status(201).json(novoLivro);
+            const autorEncontrado = await autor.findById(novoLivro.autor);
+            console.log(autorEncontrado._doc);
+            const livroCompleto = {... novoLivro, autor: {...autorEncontrado._doc}}
+            const livroCriado = await livro.create(livroCompleto)
+            res.status(201).json({ message: "Criado com sucesso", livro: livroCriado});
         }catch(error){
             console.error("Erro ao criar livro:", error);
             res.status(500).send("Erro ao criar livro.");
@@ -33,10 +39,16 @@ class LivroController {
     }
 
     static async updateLivro(req, res) {
+        const id = req.params.id;
         try {
-            const livro = await livro.findByIdAndUpdate
-            (req.params.id, req.body, {new: true});
-            res.status(200).json(livro);
+            const novoLivro = req.body;
+            if(novoLivro.autor){
+                const autorEncontrado = await autor.findById(novoLivro.autor);
+                novoLivro.autor = autorEncontrado;
+            }
+            const livroAtualizado = await livro.findByIdAndUpdate
+            (id, novoLivro, {new: true});
+            res.status(200).json(livroAtualizado);
         }
         catch(error){
             console.error("Erro ao atualizar livro:", error);
@@ -46,7 +58,8 @@ class LivroController {
 
     static async deleteLivro(req, res) {
         try {
-            await livro.findByIdAndDelete(req.params.id);
+            id = req.params.id;
+            await livro.findByIdAndDelete(id);
             res.status(200).json({message: "Livro removido com sucesso"});
         }catch(error){
             console.error("Erro ao remover livro:", error);
@@ -54,6 +67,16 @@ class LivroController {
         }
     }
 
+    static async getLivrosByEditora(req, res) {
+        const editora = req.query.editora;
+        try{
+            const livrosPorEditora = await livro.find({ editora : editora});
+            res.status(200).json(livrosPorEditora);
+        } catch(error) {
+            console.error("Erro ao buscar livros por editora:", error);
+            res.status(500).send("Erro ao buscar livros por editora.");
+        }
+    }
 };
 
 export default LivroController;
